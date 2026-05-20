@@ -6,6 +6,8 @@ function App() {
   const [answer, setAnswer] = useState("");
   const [score, setScore] = useState(0);
   const currentQuestion = sampleQuestions[questionIndex];
+  const [feedback, setFeedback] = useState("");
+  const [showAnswer, setShowAnswer] = useState(false);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -16,10 +18,21 @@ function App() {
 
     if (isCorrect) {
       setScore((prev) => prev + 4);
+
+      setFeedback("Correct!");
+    }
+    else {
+      setFeedback("Incorrect.");
     }
 
+    setShowAnswer(true);
     setAnswer("");
-    setQuestionIndex((prev) => prev + 1);
+
+    setTimeout(() => {
+      setFeedback("");
+      setShowAnswer(false);
+      setQuestionIndex((prev) => prev + 1);
+    }, 1200);
   }
 
   if (!currentQuestion) {
@@ -49,6 +62,19 @@ function App() {
       <h2>
         {currentQuestion.question}
       </h2>
+
+      {feedback && (
+        <div>
+          <p>{feedback}</p>
+
+          {!feedback.includes("Correct") && (
+            <p>
+              Correct answer:{" "}
+              {currentQuestion.answers[0]}
+            </p>
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         <input
