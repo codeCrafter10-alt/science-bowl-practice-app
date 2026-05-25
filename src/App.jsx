@@ -2,10 +2,10 @@ import { useState } from "react"
 import { sampleQuestions } from "./sampleQuestions";
 
 function App() {
-  const [questionIndex, setQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [score, setScore] = useState(0);
-  const currentQuestion = sampleQuestions[questionIndex];
+  const [currentQuestionId  , setCurrentQuestionId] = useState(sampleQuestions[0].id)
+  const currentQuestion = sampleQuestions.find((question) => question.id === currentQuestionId);
   const [feedback, setFeedback] = useState("");
   const [showAnswer, setShowAnswer] = useState(false);
 
@@ -17,12 +17,16 @@ function App() {
     const isCorrect = currentQuestion.answers.includes(normalizedAnswer);
 
     if (isCorrect) {
-      setScore((prev) => prev + 4);
-
+      if (currentQuestion.questionType === "tossup") {
+        setScore((prev) => prev + 4);
+      } else {
+        setScore((prev) => prev + 10);
+      }
+      
       setFeedback("Correct!");
     }
     else {
-      setFeedback("Incorrect.");
+      setFeedback("Incorrect");
     }
 
     setShowAnswer(true);
@@ -31,11 +35,32 @@ function App() {
     setTimeout(() => {
       setFeedback("");
       setShowAnswer(false);
-      setQuestionIndex((prev) => prev + 1);
+
+      if (currentQuestion.questionType === "tossup" && isCorrect && currentQuestion.linkedBonusId) {
+        setCurrentQuestionId(currentQuestion.linkedBonusId);
+      } else if (currentQuestion.questionType === "bonus") {
+        goToNextQuestion(1);
+      } else {
+        goToNextQuestion(2);
+      }
     }, 1200);
   }
 
-  if (!currentQuestion) {
+  function goToNextQuestion(amount) {
+    const currentIndex = sampleQuestions.findIndex(
+      (question) => question.id === currentQuestionId
+    );
+
+    const nextQuestion = sampleQuestions[currentIndex + amount];
+
+    if (nextQuestion) {
+      setCurrentQuestionId(nextQuestion.id);
+    } else {
+      setCurrentQuestionId(null);
+    }
+  }
+
+  if (currentQuestion === null) {
     return(
      <main>
         <h1>End of Set</h1>
@@ -56,7 +81,7 @@ function App() {
       </p>
 
       <p>
-        Question {questionIndex + 1} of{" "} {sampleQuestions.length}
+        Question {sampleQuestions.findIndex((question) => question.id === currentQuestionId) + 1} of {" "} {sampleQuestions.length}
       </p>
 
       <p className="division">
