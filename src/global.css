@@ -59,3 +59,17 @@ button {
 button:hover {
   background-color: #0ea5e9;
 }
+
+.division {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.question-data {
+  color: #ffffff;
+  font-size: 1.28rem;
+  margin-top: 1.2rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}

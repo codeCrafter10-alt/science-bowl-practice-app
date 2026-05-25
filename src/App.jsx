@@ -59,6 +59,14 @@ function App() {
         Question {questionIndex + 1} of{" "} {sampleQuestions.length}
       </p>
 
+      <p className="division">
+        {currentQuestion.division.split("-").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")}
+      </p>
+      <p className="question-data">
+        {currentQuestion.topic} • {" "}
+        {currentQuestion.questionType.charAt(0).toUpperCase() + currentQuestion.questionType.slice(1)}
+      </p>
+
       <h2>
         {currentQuestion.question}
       </h2>
