@@ -9,6 +9,9 @@ function App() {
   const [feedback, setFeedback] = useState("");
   const [showAnswer, setShowAnswer] = useState(false);
   const [timeLeft, setTimeLeft] = useState(5);
+  const [phase, setPhase] = useState("reading");
+  const [answerTimeLeft, setAnswerTimeLeft] = useState(3);
+  const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
 
   useEffect(() => {
     if (currentQuestion?.questionType === "tossup") {
@@ -19,38 +22,54 @@ function App() {
   }, [currentQuestionId])
 
   useEffect(() => {
-    if (timeLeft <= 0 || currentQuestionId === null) {
+    if (phase !== "reading" || timeLeft <= 0 || !currentQuestion) {
       return;
     }
 
-    const timer = setInterval(() => {
+    const timer = setTimeout(() => {
       setTimeLeft((prev) => prev-1);
     }, 1000)
 
-    return () => clearInterval(timer);
-  }, [timeLeft, currentQuestionId])
+    return () => clearTimeout(timer);
+  }, [timeLeft, currentQuestion, phase])
 
   useEffect(() => {
-  if (timeLeft > 0 || feedback === "Correct!") {
-    return;
-  }
-
-  setFeedback("Time's up.");
-  setShowAnswer(true);
-  setAnswer("");
-
-  const timeout = setTimeout(() => {
-    setFeedback("");
-    setShowAnswer(false);
-    if (currentQuestion?.questionType === "bonus" || !currentQuestion?.linkedBonusId) {
-      goToNextQuestion(1);
-    } else {
-      goToNextQuestion(2);
+    if (timeLeft > 0 || phase !== "reading") {
+      return;
     }
-  }, 5000);
 
-  return () => clearTimeout(timeout);
-}, [timeLeft]);
+    setFeedback("Time's up.");
+    setShowAnswer(true);
+    setLastAnswerCorrect(false);
+    setAnswer("");
+    setPhase("feedback");
+  }, [timeLeft]);
+
+  useEffect(() => {
+    if (phase !== "buzzed" || answerTimeLeft <= 0) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setAnswerTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [answerTimeLeft, phase]);
+
+  useEffect(() => {
+    if (phase !== "buzzed" || answerTimeLeft > 0) {
+      return;
+    }
+
+    setFeedback("Time's up.");
+    setPhase("feedback");
+  }, [answerTimeLeft, phase]);
+
+  function handleBuzz() {
+    setPhase("buzzed");
+    setAnswerTimeLeft(3);
+  }
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -64,6 +83,7 @@ function App() {
     const isCorrect = currentQuestion.answers.includes(normalizedAnswer);
 
     if (isCorrect) {
+      setLastAnswerCorrect(isCorrect);
       if (currentQuestion.questionType === "tossup") {
         setScore((prev) => prev + 4);
       } else {
@@ -76,21 +96,9 @@ function App() {
       setFeedback("Incorrect");
     }
 
+    setPhase("feedback");
     setShowAnswer(true);
     setAnswer("");
-
-    setTimeout(() => {
-      setFeedback("");
-      setShowAnswer(false);
-
-      if (currentQuestion.questionType === "tossup" && isCorrect && currentQuestion.linkedBonusId) {
-        setCurrentQuestionId(currentQuestion.linkedBonusId);
-      } else if (currentQuestion.questionType === "bonus") {
-        goToNextQuestion(1);
-      } else {
-        goToNextQuestion(2);
-      }
-    }, 1200);
   }
 
   function goToNextQuestion(amount) {
@@ -104,6 +112,21 @@ function App() {
       setCurrentQuestionId(nextQuestion.id);
     } else {
       setCurrentQuestionId(null);
+    }
+  }
+
+  function handleNextQuestion() {
+    setFeedback("");
+    setShowAnswer(false);
+    setAnswer("");
+    setPhase("reading");
+
+    if (currentQuestion.questionType === "tossup" && lastAnswerCorrect && currentQuestion.linkedBonusId) {
+      setCurrentQuestionId(currentQuestion.linkedBonusId);
+    } else if (currentQuestion.questionType === "bonus") {
+      goToNextQuestion(1);
+    } else {
+      goToNextQuestion(2);
     }
   }
 
@@ -157,20 +180,40 @@ function App() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={answer}
-          onChange={(e) =>
-            setAnswer(e.target.value)
-          }
-          autoFocus
-        />
-
-        <button type="submit">
-          Submit
+      {phase === "reading" && (
+        <button onClick={handleBuzz}>
+          Buzz
         </button>
-      </form>
+      )}
+
+      {phase === "buzzed" && (
+        <>
+          <h3>
+            Answer Time Left: {" "} {answerTimeLeft}
+          </h3>
+
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              value={answer}
+              onChange={(e) =>
+                setAnswer(e.target.value)
+              }
+              autoFocus
+            />
+
+            <button type="submit">
+              Submit
+            </button>
+          </form>
+        </>
+      )}
+
+      {phase === "feedback" && (
+        <button onClick={handleNextQuestion}>
+          Next Question
+        </button>
+      )}
     </main>
   );
 }
