@@ -30,7 +30,7 @@ function App() {
   }, [timeLeft, currentQuestion, phase])
 
   useEffect(() => {
-    if (timeLeft > 0 || phase !== "reading") {
+    if (timeLeft > 0 || phase !== "reading" || !currentQuestion) {
       return;
     }
 
@@ -39,7 +39,7 @@ function App() {
     setLastAnswerCorrect(false);
     setAnswer("");
     setPhase("feedback");
-  }, [timeLeft]);
+  }, [timeLeft, phase, currentQuestion]);
 
   useEffect(() => {
     if (phase !== "buzzed" || answerTimeLeft <= 0) {
@@ -60,6 +60,9 @@ function App() {
 
     setFeedback("Time's up.");
     setPhase("feedback");
+    setShowAnswer(true);
+    setLastAnswerCorrect(false);
+    setAnswer("");
   }, [answerTimeLeft, phase]);
 
   function resetTimers(question = currentQuestion) {
@@ -77,7 +80,7 @@ function App() {
   function handleSubmit(e) {
     e.preventDefault();
 
-    if (timeLeft <= 0) {
+    if (phase !== "buzzed") {
       return;
     }
 
