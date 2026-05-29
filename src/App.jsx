@@ -14,12 +14,8 @@ function App() {
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
 
   useEffect(() => {
-    if (currentQuestion?.questionType === "tossup") {
-      setTimeLeft(5);
-    } else {
-      setTimeLeft(20);
-    }
-  }, [currentQuestionId])
+    resetTimers();
+  }, [currentQuestionId]);
 
   useEffect(() => {
     if (phase !== "reading" || timeLeft <= 0 || !currentQuestion) {
@@ -65,6 +61,13 @@ function App() {
     setFeedback("Time's up.");
     setPhase("feedback");
   }, [answerTimeLeft, phase]);
+
+  function resetTimers(question = currentQuestion) {
+    if (!question) return;
+
+    setTimeLeft(question.questionType === "tossup" ? 5 : 20);
+    setAnswerTimeLeft(3);
+  }
 
   function handleBuzz() {
     setPhase("buzzed");
@@ -120,6 +123,8 @@ function App() {
     setShowAnswer(false);
     setAnswer("");
     setPhase("reading");
+
+    resetTimers();
 
     if (currentQuestion.questionType === "tossup" && lastAnswerCorrect && currentQuestion.linkedBonusId) {
       setCurrentQuestionId(currentQuestion.linkedBonusId);
