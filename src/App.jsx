@@ -13,13 +13,38 @@ function App() {
   const [answerTimeLeft, setAnswerTimeLeft] = useState(3);
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isRenderingQuestion, setIsRenderingQuestion] = useState(true);
+  const [displayedQuestion, setDisplayedQuestion] = useState("");
+  const [buzzedEarly, setBuzzedEarly] = useState(false);
 
   useEffect(() => {
     resetTimers();
   }, [currentQuestionId]);
 
   useEffect(() => {
-    if (phase !== "reading" || timeLeft <= 0 || !currentQuestion) {
+    if (!currentQuestion || phase !== "reading") return;
+
+    setIsRenderingQuestion(true);
+    setDisplayedQuestion("");
+
+    let charIndex = 0;
+    const fullText = currentQuestion.question;
+
+    const renderInterval = setInterval(() => {
+      if (charIndex < fullText.length) {
+        setDisplayedQuestion(fullText.substring(0, charIndex + 1));
+        charIndex++;
+      } else {
+        clearInterval(renderInterval);
+        setIsRenderingQuestion(false);
+      }
+    }, 50);
+
+    return () => clearInterval(renderInterval);
+  }, [currentQuestion, phase]);
+
+  useEffect(() => {
+    if (phase !== "reading" || timeLeft <= 0 || !currentQuestion || isRenderingQuestion) {
       return;
     }
 
@@ -28,10 +53,10 @@ function App() {
     }, 1000)
 
     return () => clearTimeout(timer);
-  }, [timeLeft, currentQuestion, phase])
+  }, [timeLeft, currentQuestion, phase, isRenderingQuestion])
 
   useEffect(() => {
-    if (timeLeft > 0 || phase !== "reading" || !currentQuestion) {
+    if (timeLeft > 0 || phase !== "reading" || !currentQuestion || isRenderingQuestion) {
       return;
     }
 
@@ -40,7 +65,7 @@ function App() {
     setLastAnswerCorrect(false);
     setAnswer("");
     setPhase("feedback");
-  }, [timeLeft, phase, currentQuestion]);
+  }, [timeLeft, phase, currentQuestion, isRenderingQuestion]);
 
   useEffect(() => {
     if (phase !== "buzzed" || answerTimeLeft <= 0) {
@@ -80,7 +105,7 @@ function App() {
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [phase, currentQuestion, lastAnswerCorrect, isProcessing]);
+  }, [phase, currentQuestion, lastAnswerCorrect, isProcessing, isRenderingQuestion]);
 
   function resetTimers(question = currentQuestion) {
     if (!question) return;
@@ -95,6 +120,11 @@ function App() {
     }
 
     setIsProcessing(true);
+
+    if (isRenderingQuestion) {
+      setBuzzedEarly(true);
+    }
+
     setPhase("buzzed");
     setAnswerTimeLeft(3);
     setIsProcessing(false);
@@ -156,6 +186,7 @@ function App() {
     setShowAnswer(false);
     setAnswer("");
     setPhase("reading");
+    setBuzzedEarly(false);
 
     resetTimers();
 
@@ -181,6 +212,7 @@ function App() {
     setAnswer("");
     setPhase("reading");
     setLastAnswerCorrect(false);
+    setBuzzedEarly(false);
 
     resetTimers();
 
@@ -227,7 +259,12 @@ function App() {
       </p>
 
       <h2>
-        {currentQuestion.question}
+        {displayedQuestion}
+        {buzzedEarly && (
+          <span className="interrupt">
+            {" "} [INTERRUPT]
+          </span>
+        )}
       </h2>
 
       {feedback && (
