@@ -12,6 +12,7 @@ function App() {
   const [phase, setPhase] = useState("reading");
   const [answerTimeLeft, setAnswerTimeLeft] = useState(3);
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     resetTimers();
@@ -67,6 +68,8 @@ function App() {
 
   useEffect(() => {
     function handleKeyPress(e) {
+      if (isProcessing) return;
+      
       if (e.key === "Enter" && phase === "feedback") {
         handleNextQuestion();
       } else if (e.code === "Space" && phase === "reading") {
@@ -77,7 +80,7 @@ function App() {
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [phase, currentQuestion, lastAnswerCorrect]);
+  }, [phase, currentQuestion, lastAnswerCorrect, isProcessing]);
 
   function resetTimers(question = currentQuestion) {
     if (!question) return;
@@ -87,17 +90,24 @@ function App() {
   }
 
   function handleBuzz() {
+    if (phase !== "reading" || isProcessing) {
+      return;
+    }
+
+    setIsProcessing(true);
     setPhase("buzzed");
     setAnswerTimeLeft(3);
+    setIsProcessing(false);
   }
 
   function handleSubmit(e) {
     e.preventDefault();
 
-    if (phase !== "buzzed") {
+    if (phase !== "buzzed" || isProcessing) {
       return;
     }
 
+    setIsProcessing(true);
     const normalizedAnswer = answer.toLowerCase().trim();
 
     const isCorrect = currentQuestion.answers.includes(normalizedAnswer);
@@ -119,6 +129,7 @@ function App() {
     setPhase("feedback");
     setShowAnswer(true);
     setAnswer("");
+    setIsProcessing(false);
   }
 
   function goToNextQuestion(amount) {
@@ -136,6 +147,11 @@ function App() {
   }
 
   function handleNextQuestion() {
+    if (phase !== "feedback" || isProcessing) {
+      return;
+    }
+
+    setIsProcessing(true);
     setFeedback("");
     setShowAnswer(false);
     setAnswer("");
@@ -150,9 +166,16 @@ function App() {
     } else {
       goToNextQuestion(2);
     }
+    
+    setIsProcessing(false);
   }
 
   function handleSkipQuestion() {
+    if (phase !== "reading" || isProcessing) {
+      return;
+    }
+
+    setIsProcessing(true);
     setFeedback("");
     setShowAnswer(false);
     setAnswer("");
@@ -166,6 +189,8 @@ function App() {
     } else {
       goToNextQuestion(1);
     }
+    
+    setIsProcessing(false);
   }
 
   if (!currentQuestion) {
