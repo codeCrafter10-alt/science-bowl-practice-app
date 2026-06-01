@@ -13,13 +13,37 @@ function App() {
   const [answerTimeLeft, setAnswerTimeLeft] = useState(3);
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isRenderingQuestion, setIsRenderingQuestion] = useState(true);
+  const [displayedQuestion, setDisplayedQuestion] = useState("");
 
   useEffect(() => {
     resetTimers();
   }, [currentQuestionId]);
 
   useEffect(() => {
-    if (phase !== "reading" || timeLeft <= 0 || !currentQuestion) {
+    if (!currentQuestion) return;
+
+    setIsRenderingQuestion(true);
+    setDisplayedQuestion("");
+
+    let charIndex = 0;
+    const fullText = currentQuestion.question;
+
+    const renderInterval = setInterval(() => {
+      if (charIndex < fullText.length) {
+        setDisplayedQuestion(fullText.substring(0, charIndex + 1));
+        charIndex++;
+      } else {
+        clearInterval(renderInterval);
+        setIsRenderingQuestion(false);
+      }
+    }, 50);
+
+    return () => clearInterval(renderInterval);
+  }, [currentQuestion]);
+
+  useEffect(() => {
+    if (phase !== "reading" || timeLeft <= 0 || !currentQuestion || isRenderingQuestion) {
       return;
     }
 
@@ -28,10 +52,10 @@ function App() {
     }, 1000)
 
     return () => clearTimeout(timer);
-  }, [timeLeft, currentQuestion, phase])
+  }, [timeLeft, currentQuestion, phase, isRenderingQuestion])
 
   useEffect(() => {
-    if (timeLeft > 0 || phase !== "reading" || !currentQuestion) {
+    if (timeLeft > 0 || phase !== "reading" || !currentQuestion || isRenderingQuestion) {
       return;
     }
 
@@ -40,7 +64,7 @@ function App() {
     setLastAnswerCorrect(false);
     setAnswer("");
     setPhase("feedback");
-  }, [timeLeft, phase, currentQuestion]);
+  }, [timeLeft, phase, currentQuestion, isRenderingQuestion]);
 
   useEffect(() => {
     if (phase !== "buzzed" || answerTimeLeft <= 0) {
@@ -68,7 +92,7 @@ function App() {
 
   useEffect(() => {
     function handleKeyPress(e) {
-      if (isProcessing) return;
+      if (isProcessing || isRenderingQuestion) return;
       
       if (e.key === "Enter" && phase === "feedback") {
         handleNextQuestion();
@@ -80,7 +104,7 @@ function App() {
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [phase, currentQuestion, lastAnswerCorrect, isProcessing]);
+  }, [phase, currentQuestion, lastAnswerCorrect, isProcessing, isRenderingQuestion]);
 
   function resetTimers(question = currentQuestion) {
     if (!question) return;
@@ -90,7 +114,7 @@ function App() {
   }
 
   function handleBuzz() {
-    if (phase !== "reading" || isProcessing) {
+    if (phase !== "reading" || isProcessing || isRenderingQuestion) {
       return;
     }
 
@@ -227,7 +251,7 @@ function App() {
       </p>
 
       <h2>
-        {currentQuestion.question}
+        {displayedQuestion}
       </h2>
 
       {feedback && (
@@ -245,7 +269,7 @@ function App() {
 
       {phase === "reading" && (
         <div>
-          <button className = "button-primary" onClick={handleBuzz}>
+          <button className = "button-primary" onClick={handleBuzz} disabled={isRenderingQuestion}>
             Buzz
           </button>
           <button className = "button-secondary" onClick={handleSkipQuestion}>
