@@ -46,7 +46,7 @@ input {
   border-radius: 6px;
 }
 
-button {
+.button-primary {
   padding: 0.8rem 1.2rem;
   font-size: 1rem;
   border: none;
@@ -56,8 +56,10 @@ button {
   color: white;
 }
 
-button:hover {
+.button-primary:hover {
   background-color: #0ea5e9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
 }
 
 .division {
@@ -79,4 +81,21 @@ button:hover {
   color: #38bdf8;
   font-size: 1.5rem;
   font-weight: bold;
+}
+
+.button-secondary {
+  background-color: #64748b;
+  padding: 0.8rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+  float: right;
+  margin-right: 0.5rem;
+}
+
+.button-secondary:hover {
+  background-color: #475569;
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
 }

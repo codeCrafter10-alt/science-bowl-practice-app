@@ -138,6 +138,22 @@ function App() {
     }
   }
 
+  function handleSkipQuestion() {
+    setFeedback("");
+    setShowAnswer(false);
+    setAnswer("");
+    setPhase("reading");
+    setLastAnswerCorrect(false);
+
+    resetTimers();
+
+    if (currentQuestion.questionType === "tossup") {
+      goToNextQuestion(2);
+    } else {
+      goToNextQuestion(1);
+    }
+  }
+
   if (!currentQuestion) {
     return(
      <main>
@@ -189,9 +205,14 @@ function App() {
       )}
 
       {phase === "reading" && (
-        <button onClick={handleBuzz}>
-          Buzz
-        </button>
+        <div>
+          <button className = "button-primary" onClick={handleBuzz}>
+            Buzz
+          </button>
+          <button className = "button-secondary" onClick={handleSkipQuestion}>
+            Skip Question
+          </button>
+        </div>
       )}
 
       {phase === "buzzed" && (
@@ -210,7 +231,7 @@ function App() {
               autoFocus
             />
 
-            <button type="submit">
+            <button className = "button-primary" type="submit">
               Submit
             </button>
           </form>
@@ -218,7 +239,7 @@ function App() {
       )}
 
       {phase === "feedback" && (
-        <button onClick={handleNextQuestion}>
+        <button className = "button-primary" onClick={handleNextQuestion}>
           Next Question
         </button>
       )}
