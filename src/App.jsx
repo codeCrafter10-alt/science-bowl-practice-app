@@ -65,6 +65,20 @@ function App() {
     setAnswer("");
   }, [answerTimeLeft, phase]);
 
+  useEffect(() => {
+    function handleKeyPress(e) {
+      if (e.key === "Enter" && phase === "feedback") {
+        handleNextQuestion();
+      } else if (e.code === "Space" && phase === "reading") {
+        e.preventDefault();
+        handleBuzz();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [phase, currentQuestion, lastAnswerCorrect]);
+
   function resetTimers(question = currentQuestion) {
     if (!question) return;
 
