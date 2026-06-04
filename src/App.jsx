@@ -168,7 +168,12 @@ function App() {
       setFeedback("Correct!");
     }
     else {
-      setFeedback("Incorrect");
+      if (buzzedEarly && currentQuestion.questionType === "tossup") {
+        setScore((prev) => prev - 4);
+        setFeedback("Incorrect. Penalty of 4 points applied");
+      } else {
+        setFeedback("Incorrect");
+      }
     }
 
     setPhase("feedback");
