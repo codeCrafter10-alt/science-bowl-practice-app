@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { sampleQuestions } from "./sampleQuestions";
+import { useSpeech } from "./useSpeech";
 
 function App() {
   const [answer, setAnswer] = useState("");
@@ -16,6 +17,7 @@ function App() {
   const [isRenderingQuestion, setIsRenderingQuestion] = useState(true);
   const [displayedQuestion, setDisplayedQuestion] = useState("");
   const [buzzedEarly, setBuzzedEarly] = useState(false);
+  const {speak, stop, isMuted, toggleMute} = useSpeech();
 
   useEffect(() => {
     resetTimers();
@@ -26,6 +28,8 @@ function App() {
 
     setIsRenderingQuestion(true);
     setDisplayedQuestion("");
+
+    speak(currentQuestion.question);
 
     let charIndex = 0;
     const fullText = currentQuestion.question;
@@ -40,8 +44,17 @@ function App() {
       }
     }, 50);
 
-    return () => clearInterval(renderInterval);
+    return () => {
+      clearInterval(renderInterval);
+      stop();
+    };
   }, [currentQuestion, phase]);
+
+  useEffect(() => {
+    if (phase !== "reading") {
+      stop();
+    }
+  }, [phase, stop]);
 
   useEffect(() => {
     if (phase !== "reading" || timeLeft <= 0 || !currentQuestion || isRenderingQuestion) {
@@ -119,10 +132,12 @@ function App() {
       return;
     }
 
+    stop();
     setIsProcessing(true);
 
     if (isRenderingQuestion) {
       setBuzzedEarly(true);
+      setIsRenderingQuestion(false);
     }
 
     setPhase("buzzed");
@@ -206,6 +221,7 @@ function App() {
       return;
     }
 
+    stop();
     setIsProcessing(true);
     setFeedback("");
     setShowAnswer(false);
@@ -239,6 +255,13 @@ function App() {
 
   return (
     <main>
+      <button
+        className="mute-button"
+        onClick={toggleMute}
+      >
+        {isMuted ? "Sound Off" : "Sound On"}
+      </button>
+
       <h1>Science Bowl App</h1>
 
       <p>
