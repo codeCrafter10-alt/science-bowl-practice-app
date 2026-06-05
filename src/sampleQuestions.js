@@ -33,7 +33,7 @@ export const sampleQuestions = [
       "Y": "neutral",
       "Z": "in equilibrium"
     },
-    "answers": ["W", "basic"]
+    "answers": ["w", "basic"]
   },
   {
     "id": 4,
@@ -99,7 +99,7 @@ export const sampleQuestions = [
       "Y": "negative, positive",
       "Z": "negative, negative"
     },
-    "answers": ["X", "positive, negative"]
+    "answers": ["x", "positive, negative"]
   },
   {
     "id": 10,
@@ -114,7 +114,7 @@ export const sampleQuestions = [
       "Y": "9",
       "Z": "15"
     },
-    "answers": ["W", "3"]
+    "answers": ["w", "3"]
   },
 
   {
@@ -171,7 +171,7 @@ export const sampleQuestions = [
       "Y": "nervous",
       "Z": "muscle"
     },
-    "answers": ["W", "epithelial"]
+    "answers": ["w", "epithelial"]
   },
   {
     "id": 16,
@@ -226,6 +226,6 @@ export const sampleQuestions = [
       "Y": "constant velocity",
       "Z": "zero acceleration"
     },
-    "answers": ["W", "constant acceleration"]
+    "answers": ["w", "constant acceleration"]
   }
 ]

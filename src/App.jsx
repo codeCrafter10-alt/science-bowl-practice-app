@@ -283,7 +283,9 @@ function App() {
       </p>
       <p className="question-data">
         {currentQuestion.topic} • {" "}
-        {currentQuestion.questionType.charAt(0).toUpperCase() + currentQuestion.questionType.slice(1)}
+        {currentQuestion.questionType.charAt(0).toUpperCase() +
+          currentQuestion.questionType.slice(1)} {" • "}
+        {currentQuestion.type === "multiple-choice" ? "Multiple Choice" : "Short Answer"}
       </p>
 
       <h2>
@@ -295,6 +297,16 @@ function App() {
         )}
       </h2>
 
+      {currentQuestion.type === "multiple-choice" && (
+        <div className="choices">
+          {Object.entries(currentQuestion.choices).map(([letter, choice]) => (
+            <p key={letter}>
+              {letter}: {choice}
+            </p>
+          ))}
+        </div>
+      )}
+
       {feedback && (
         <div>
           <p>{feedback}</p>
@@ -302,7 +314,9 @@ function App() {
           {!feedback.includes("Correct") && (
             <p>
               Correct answer:{" "}
-              {currentQuestion.answers[0]}
+              {currentQuestion.type === "multiple-choice"
+                ? `${currentQuestion.answers[0].toUpperCase()}: ${currentQuestion.answers[1]}`
+                : currentQuestion.answers[0]}
             </p>
           )}
         </div>
