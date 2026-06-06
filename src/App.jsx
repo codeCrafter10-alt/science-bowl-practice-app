@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { sampleQuestions } from "./sampleQuestions";
 import { useSpeech } from "./useSpeech";
 
@@ -18,6 +18,8 @@ function App() {
   const [displayedQuestion, setDisplayedQuestion] = useState("");
   const [buzzedEarly, setBuzzedEarly] = useState(false);
   const {speak, stop, isMuted, toggleMute} = useSpeech();
+  const renderIntervalRef = useRef(null);
+  const startDelayRef = useRef(null);
 
   const displayQuestionText = currentQuestion?.type === "multiple-choice" ? `${currentQuestion.question}
 
@@ -36,6 +38,16 @@ function App() {
     resetTimers();
   }, [currentQuestionId]);
 
+  function stopQuestionRendering() {
+    clearTimeout(startDelayRef.current);
+    clearInterval(renderIntervalRef.current);
+
+    startDelayRef.current = null;
+    renderIntervalRef.current = null;
+
+    setIsRenderingQuestion(false);
+  }
+
   useEffect(() => {
     if (!currentQuestion || phase !== "reading") return;
 
@@ -47,23 +59,22 @@ function App() {
     let charIndex = 0;
     const fullText = displayQuestionText;
 
-    let renderInterval;
-    
-    const startDelay = setTimeout(() => {
-      const renderInterval = setInterval(() => {
+    startDelayRef.current = setTimeout(() => {
+      renderIntervalRef.current = setInterval(() => {
         if (charIndex < fullText.length) {
           setDisplayedQuestion(fullText.substring(0, charIndex + 1));
           charIndex++;
         } else {
-          clearInterval(renderInterval);
+          clearInterval(renderIntervalRef.current);
+          renderIntervalRef.current = null;
           setIsRenderingQuestion(false);
         }
       }, 60);
-    }, 1000)
+    }, 1000);
 
     return () => {
-      clearTimeout(startDelay);
-      clearInterval(renderInterval);
+      clearTimeout(startDelayRef.current);
+      clearInterval(renderIntervalRef.current);
       stop();
     };
   }, [currentQuestion, phase]);
@@ -154,8 +165,8 @@ function App() {
     setIsProcessing(true);
 
     if (isRenderingQuestion) {
+      stopQuestionRendering();
       setBuzzedEarly(true);
-      setIsRenderingQuestion(false);
     }
 
     setPhase("buzzed");
@@ -219,6 +230,7 @@ function App() {
       return;
     }
 
+    stopQuestionRendering();
     setIsProcessing(true);
     setFeedback("");
     setShowAnswer(false);
@@ -244,6 +256,7 @@ function App() {
       return;
     }
 
+    stopQuestionRendering();
     stop();
     setIsProcessing(true);
     setFeedback("");
