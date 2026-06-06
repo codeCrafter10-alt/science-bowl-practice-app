@@ -42,19 +42,21 @@ function App() {
 
     let charIndex = 0;
     const fullText = fullQuestionText;
-
-    const renderInterval = setInterval(() => {
-      if (charIndex < fullText.length) {
-        setDisplayedQuestion(fullText.substring(0, charIndex + 1));
-        charIndex++;
-      } else {
-        clearInterval(renderInterval);
-        setIsRenderingQuestion(false);
-      }
-    }, 60);
+    
+    const startDelay = setTimeout(() => {
+      const renderInterval = setInterval(() => {
+        if (charIndex < fullText.length) {
+          setDisplayedQuestion(fullText.substring(0, charIndex + 1));
+          charIndex++;
+        } else {
+          clearInterval(renderInterval);
+          setIsRenderingQuestion(false);
+        }
+      }, 60);
+    }, 500)
 
     return () => {
-      clearInterval(renderInterval);
+      clearInterval(startDelay);
       stop();
     };
   }, [currentQuestion, phase]);
