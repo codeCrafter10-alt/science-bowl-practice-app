@@ -14,7 +14,7 @@ export function useSpeech() {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 1.15;
-    utterance.pitch = 5;
+    utterance.pitch = 2;
     utterance.volume = 1;
 
     utteranceRef.current = utterance;

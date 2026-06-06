@@ -19,14 +19,18 @@ function App() {
   const [buzzedEarly, setBuzzedEarly] = useState(false);
   const {speak, stop, isMuted, toggleMute} = useSpeech();
 
-  const fullQuestionText =
-    currentQuestion?.type === "multiple-choice" ? `${currentQuestion.question}
+  const displayQuestionText = currentQuestion?.type === "multiple-choice" ? `${currentQuestion.question}
 
     W: ${currentQuestion.choices.W}
     X: ${currentQuestion.choices.X}
     Y: ${currentQuestion.choices.Y}
     Z: ${currentQuestion.choices.Z}`
         : currentQuestion?.question ?? "";
+
+  const speechQuestionText =
+    currentQuestion?.type === "multiple-choice" ? `${currentQuestion.question}
+
+    W, ${currentQuestion.choices.W} X, ${currentQuestion.choices.X} Y, ${currentQuestion.choices.Y} Z, ${currentQuestion.choices.Z}` : currentQuestion?.question ?? "";
 
   useEffect(() => {
     resetTimers();
@@ -38,10 +42,12 @@ function App() {
     setIsRenderingQuestion(true);
     setDisplayedQuestion("");
 
-    speak(fullQuestionText);
+    speak(speechQuestionText);
 
     let charIndex = 0;
-    const fullText = fullQuestionText;
+    const fullText = displayQuestionText;
+
+    let renderInterval;
     
     const startDelay = setTimeout(() => {
       const renderInterval = setInterval(() => {
@@ -53,10 +59,11 @@ function App() {
           setIsRenderingQuestion(false);
         }
       }, 60);
-    }, 500)
+    }, 1000)
 
     return () => {
-      clearInterval(startDelay);
+      clearTimeout(startDelay);
+      clearInterval(renderInterval);
       stop();
     };
   }, [currentQuestion, phase]);
