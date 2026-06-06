@@ -150,3 +150,7 @@ input {
   font-size: large;
   color: white;
 }
+
+.question-text {
+  white-space: pre-line;
+}

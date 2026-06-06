@@ -19,6 +19,15 @@ function App() {
   const [buzzedEarly, setBuzzedEarly] = useState(false);
   const {speak, stop, isMuted, toggleMute} = useSpeech();
 
+  const fullQuestionText =
+    currentQuestion?.type === "multiple-choice" ? `${currentQuestion.question}
+
+    W: ${currentQuestion.choices.W}
+    X: ${currentQuestion.choices.X}
+    Y: ${currentQuestion.choices.Y}
+    Z: ${currentQuestion.choices.Z}`
+        : currentQuestion?.question ?? "";
+
   useEffect(() => {
     resetTimers();
   }, [currentQuestionId]);
@@ -29,10 +38,10 @@ function App() {
     setIsRenderingQuestion(true);
     setDisplayedQuestion("");
 
-    speak(currentQuestion.question);
+    speak(fullQuestionText);
 
     let charIndex = 0;
-    const fullText = currentQuestion.question;
+    const fullText = fullQuestionText;
 
     const renderInterval = setInterval(() => {
       if (charIndex < fullText.length) {
@@ -42,7 +51,7 @@ function App() {
         clearInterval(renderInterval);
         setIsRenderingQuestion(false);
       }
-    }, 50);
+    }, 60);
 
     return () => {
       clearInterval(renderInterval);
@@ -288,7 +297,7 @@ function App() {
         {currentQuestion.type === "multiple-choice" ? "Multiple Choice" : "Short Answer"}
       </p>
 
-      <h2>
+      <h2 className="question-text">
         {displayedQuestion}
         {buzzedEarly && (
           <span className="interrupt">
@@ -296,16 +305,6 @@ function App() {
           </span>
         )}
       </h2>
-
-      {currentQuestion.type === "multiple-choice" && (
-        <div className="choices">
-          {Object.entries(currentQuestion.choices).map(([letter, choice]) => (
-            <p key={letter}>
-              {letter}: {choice}
-            </p>
-          ))}
-        </div>
-      )}
 
       {feedback && (
         <div>
