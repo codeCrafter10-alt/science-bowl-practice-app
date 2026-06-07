@@ -302,6 +302,16 @@ function App() {
     setFeedback("Answer overridden.");
   }
 
+  function handleSearchQuestion() {
+    window.open(
+      `https://www.google.com/search?q=${encodeURIComponent(
+        currentQuestion.question
+      )}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
   if (!currentQuestion) {
     return(
      <main>
@@ -411,10 +421,22 @@ function App() {
         </>
       )}
 
-      {phase === "feedback" && (
-        <button className = "button-primary" onClick={handleNextQuestion}>
-          Next Question
-        </button>
+     {phase === "feedback" && (
+        <div className="feedback-actions">
+          <button
+            className="button-primary"
+            onClick={handleNextQuestion}
+          >
+            Next Question
+          </button>
+
+          <button
+            className="search-button"
+            onClick={handleSearchQuestion}
+          >
+            Search Question
+          </button>
+        </div>
       )}
     </main>
   );
