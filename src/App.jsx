@@ -20,6 +20,7 @@ function App() {
   const {speak, stop, isMuted, toggleMute} = useSpeech();
   const renderIntervalRef = useRef(null);
   const startDelayRef = useRef(null);
+  const [canOverrideAnswer, setCanOverrideAnswer] = useState(false);
 
   const displayQuestionText = currentQuestion?.type === "multiple-choice" ? `${currentQuestion.question}
 
@@ -187,6 +188,7 @@ function App() {
     const isCorrect = currentQuestion.answers.includes(normalizedAnswer);
 
     if (isCorrect) {
+      setCanOverrideAnswer(false);
       setLastAnswerCorrect(isCorrect);
       if (currentQuestion.questionType === "tossup") {
         setScore((prev) => prev + 4);
@@ -197,6 +199,8 @@ function App() {
       setFeedback("Correct!");
     }
     else {
+      setCanOverrideAnswer(true);
+
       if (buzzedEarly && currentQuestion.questionType === "tossup") {
         setScore((prev) => prev - 4);
         setFeedback("Incorrect. Penalty of 4 points applied");
@@ -230,6 +234,7 @@ function App() {
       return;
     }
 
+    setCanOverrideAnswer(false);
     stopQuestionRendering();
     setIsProcessing(true);
     setFeedback("");
@@ -256,6 +261,7 @@ function App() {
       return;
     }
 
+    setCanOverrideAnswer(false);
     stopQuestionRendering();
     stop();
     setIsProcessing(true);
@@ -275,6 +281,25 @@ function App() {
     }
     
     setIsProcessing(false);
+  }
+
+  function handleOverrideAnswer() {
+    if (!canOverrideAnswer || isProcessing) {
+      return;
+    }
+
+    setCanOverrideAnswer(false);
+    setLastAnswerCorrect(true);
+
+    if (buzzedEarly && currentQuestion.questionType === "tossup") {
+      setScore((prev) => prev + 8);
+    } else if (currentQuestion.questionType === "tossup") {
+      setScore((prev) => prev + 4);
+    } else {
+      setScore((prev) => prev + 10);
+    }
+
+    setFeedback("Answer overridden.");
   }
 
   if (!currentQuestion) {
@@ -341,6 +366,15 @@ function App() {
             </p>
           )}
         </div>
+      )}
+
+      {canOverrideAnswer && (
+        <button
+          className="button-secondary"
+          onClick={handleOverrideAnswer}
+        >
+          I Was Right
+        </button>
       )}
 
       {phase === "reading" && (
