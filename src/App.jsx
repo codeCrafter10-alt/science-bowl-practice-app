@@ -21,6 +21,9 @@ function App() {
   const renderIntervalRef = useRef(null);
   const startDelayRef = useRef(null);
   const [canOverrideAnswer, setCanOverrideAnswer] = useState(false);
+  const progress = ((sampleQuestions.findIndex((question) => question.id === currentQuestionId) + 1) / sampleQuestions.length) * 100;
+
+  console.log(progress)
 
   const displayQuestionText = currentQuestion?.type === "multiple-choice" ? `${currentQuestion.question}
 
@@ -342,6 +345,14 @@ function App() {
       <p>
         Question {sampleQuestions.findIndex((question) => question.id === currentQuestionId) + 1} of {" "} {sampleQuestions.length}
       </p>
+
+      <div className="progress-bar">
+        <div
+          className="progress-fill"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+
       <h3 className="timer">Time Left: {timeLeft}</h3>
 
       <p className="division">
