@@ -11,7 +11,7 @@ function App() {
   const [showAnswer, setShowAnswer] = useState(false);
   const [timeLeft, setTimeLeft] = useState(5);
   const [phase, setPhase] = useState("reading");
-  const [answerTimeLeft, setAnswerTimeLeft] = useState(3);
+  const [answerTimeLeft, setAnswerTimeLeft] = useState(4);
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRenderingQuestion, setIsRenderingQuestion] = useState(true);
@@ -23,7 +23,10 @@ function App() {
   const [canOverrideAnswer, setCanOverrideAnswer] = useState(false);
   const progress = ((sampleQuestions.findIndex((question) => question.id === currentQuestionId) + 1) / sampleQuestions.length) * 100;
 
-  console.log(progress)
+  function playSound(soundFile) {
+    const audio = new Audio(`/sounds/${soundFile}`);
+    audio.play().catch(() => {});
+  }
 
   const displayQuestionText = currentQuestion?.type === "multiple-choice" ? `${currentQuestion.question}
 
@@ -157,7 +160,7 @@ function App() {
     if (!question) return;
 
     setTimeLeft(question.questionType === "tossup" ? 5 : 20);
-    setAnswerTimeLeft(3);
+    setAnswerTimeLeft(4);
   }
 
   function handleBuzz() {
@@ -165,6 +168,7 @@ function App() {
       return;
     }
 
+    playSound("buzzer.mp3");
     stop();
     setIsProcessing(true);
 
@@ -174,7 +178,7 @@ function App() {
     }
 
     setPhase("buzzed");
-    setAnswerTimeLeft(3);
+    setAnswerTimeLeft(4);
     setIsProcessing(false);
   }
 
