@@ -241,3 +241,18 @@ h4 {
   margin-bottom: 9px;
   font-size: medium;
 }
+
+.review-card {
+  margin: 1rem auto;
+  padding: 1rem;
+  max-width: 700px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background-color: #101d38;
+  text-align: left;
+}
+
+.review-card p,
+.review-card strong {
+  color: white;
+}

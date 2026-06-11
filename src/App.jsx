@@ -35,6 +35,9 @@ function App() {
   const [subjectStats, setSubjectStats] = useState({});
   const [timeoutCount, setTimeoutCount] = useState(0);
 
+  const [questionHistory, setQuestionHistory] = useState([]);
+  const [reviewMode, setReviewMode] = useState(false);
+
   function playSound(soundFile) {
     const audio = new Audio(`/sounds/${soundFile}`);
     audio.play().catch(() => {});
@@ -121,6 +124,7 @@ function App() {
       return;
     }
 
+    recordQuestionResult("timeout");
     setTimeoutCount((prev) => prev + 1);
     setFeedback("Time's up.");
     setShowAnswer(true);
@@ -146,6 +150,7 @@ function App() {
       return;
     }
 
+    recordQuestionResult("timeout");
     setTimeoutCount((prev) => prev + 1);
     setFeedback("Time's up.");
     setPhase("feedback");
@@ -169,6 +174,24 @@ function App() {
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [phase, currentQuestion, lastAnswerCorrect, isProcessing, isRenderingQuestion]);
+
+  function recordQuestionResult(result, userAnswer = "") {
+    setQuestionHistory((prev) => [
+      ...prev,
+      {
+        questionId: currentQuestion.id,
+        question: currentQuestion.question,
+        topic: currentQuestion.topic,
+        questionType: currentQuestion.questionType, result, userAnswer,
+        correctAnswer:
+          currentQuestion.type === "multiple-choice"
+            ? currentQuestion.answers[1]
+            : currentQuestion.answers[0],
+
+        interrupted: buzzedEarly,
+      },
+    ]);
+  }
 
   function recordSubjectAttempt(topic, questionType, isCorrect) {
     setSubjectStats((prev) => {
@@ -255,6 +278,10 @@ function App() {
     }
 
     if (isCorrect) {
+      recordQuestionResult(
+        "correct",
+        answer
+      );
       setCanOverrideAnswer(false);
       setLastAnswerCorrect(isCorrect);
       if (currentQuestion.questionType === "tossup") {
@@ -277,6 +304,10 @@ function App() {
       }
     }
     else {
+      recordQuestionResult(
+        "incorrect",
+        answer
+      );
       setCanOverrideAnswer(true);
 
       if (buzzedEarly && currentQuestion.questionType === "tossup") {
@@ -417,12 +448,91 @@ function App() {
       ? (bonusCorrect / bonusAttempted) * 100
       : 0;
 
+
+  if (reviewMode) {
+    const missedQuestions = questionHistory.filter(
+      (question) =>
+        question.result === "incorrect" ||
+        question.result === "timeout"
+    );
+
+    return (
+      <main>
+        <h1>Review Missed Questions</h1>
+
+        {missedQuestions.length === 0 ? (
+          <p>No missed questions.</p>
+        ) : (
+          missedQuestions.map((question, index) => (
+            <div
+              key={index}
+              className="review-card"
+            >
+              <p>
+                <strong>
+                  {question.topic}
+                </strong>
+              </p>
+
+              <p>
+                {question.question}
+              </p>
+
+              <p>
+                Your Answer:
+                {" "}
+                {question.userAnswer || "None"}
+              </p>
+
+              <p>
+                Correct Answer:
+                {" "}
+                {question.correctAnswer}
+              </p>
+
+              <button
+                className="search-button"
+                onClick={() =>
+                  window.open(
+                    `https://www.google.com/search?q=${encodeURIComponent(
+                      question.question
+                    )}`,
+                    "_blank"
+                  )
+                }
+              >
+                Search Question
+              </button>
+            </div>
+          ))
+        )}
+        <div>
+          <button
+            className="button-secondary"
+            onClick={() => setReviewMode(false)}
+            style={{ float: "none"}}
+          >
+            Back
+          </button>
+        </div>
+      </main>
+    );
+  }
+  
   if (!currentQuestion) {
     return (
       <main>
         <h1>End of Set</h1>
 
         <h2>Final Score: {score}</h2>
+
+        <button
+          className="button-primary"
+          onClick={() => setReviewMode(true)}
+          style={{ width: "230px", fontSize: "16px", marginBottom: "20px"}}
+        >
+          Review Missed Questions
+        </button>
 
         <h3 className="stat-title">Overall Statistics</h3>
 
