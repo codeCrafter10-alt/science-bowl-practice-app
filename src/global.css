@@ -214,3 +214,30 @@ input {
 .search-button:active {
   transform: scale(0.97);
 }
+
+.stat-title {
+  margin-bottom: 10px;
+}
+
+.stats-table {
+  width: 100%;
+  max-width: 700px;
+
+  margin: 1rem auto;
+
+  border-collapse: collapse;
+}
+
+.stats-table th,
+.stats-table td {
+  border: 1px solid #d1d5db;
+
+  padding: 0.75rem;
+
+  text-align: center;
+}
+
+h4 {
+  margin-bottom: 9px;
+  font-size: medium;
+}

@@ -23,6 +23,18 @@ function App() {
   const [canOverrideAnswer, setCanOverrideAnswer] = useState(false);
   const progress = ((sampleQuestions.findIndex((question) => question.id === currentQuestionId) + 1) / sampleQuestions.length) * 100;
 
+  const [correctCount, setCorrectCount] = useState(0);
+  const [incorrectCount, setIncorrectCount] = useState(0);
+  const [skippedCount, setSkippedCount] = useState(0);
+  const [interruptions, setInterruptions] = useState(0);
+  const [correctInterruptions, setCorrectInterruptions] = useState(0);
+  const [tossupAttempted, setTossupAttempted] = useState(0);
+  const [tossupCorrect, setTossupCorrect] = useState(0);
+  const [bonusAttempted, setBonusAttempted] = useState(0);
+  const [bonusCorrect, setBonusCorrect] = useState(0);
+  const [subjectStats, setSubjectStats] = useState({});
+  const [timeoutCount, setTimeoutCount] = useState(0);
+
   function playSound(soundFile) {
     const audio = new Audio(`/sounds/${soundFile}`);
     audio.play().catch(() => {});
@@ -109,6 +121,7 @@ function App() {
       return;
     }
 
+    setTimeoutCount((prev) => prev + 1);
     setFeedback("Time's up.");
     setShowAnswer(true);
     setLastAnswerCorrect(false);
@@ -133,6 +146,7 @@ function App() {
       return;
     }
 
+    setTimeoutCount((prev) => prev + 1);
     setFeedback("Time's up.");
     setPhase("feedback");
     setShowAnswer(true);
@@ -156,6 +170,38 @@ function App() {
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [phase, currentQuestion, lastAnswerCorrect, isProcessing, isRenderingQuestion]);
 
+  function recordSubjectAttempt(topic, questionType, isCorrect) {
+    setSubjectStats((prev) => {
+      const current = prev[topic] || {
+        tossupAttempted: 0,
+        tossupCorrect: 0,
+        bonusAttempted: 0,
+        bonusCorrect: 0,
+      };
+
+      const updated = { ...current };
+
+      if (questionType === "tossup") {
+        updated.tossupAttempted += 1;
+
+        if (isCorrect) {
+          updated.tossupCorrect += 1;
+        }
+      } else {
+        updated.bonusAttempted += 1;
+
+        if (isCorrect) {
+          updated.bonusCorrect += 1;
+        }
+      }
+
+      return {
+        ...prev,
+        [topic]: updated,
+      };
+    });
+  }
+
   function resetTimers(question = currentQuestion) {
     if (!question) return;
 
@@ -175,11 +221,13 @@ function App() {
     if (isRenderingQuestion) {
       stopQuestionRendering();
       setBuzzedEarly(true);
+      setInterruptions((prev) => prev+1);
     }
 
     setPhase("buzzed");
     setAnswerTimeLeft(4);
     setIsProcessing(false);
+    setAnswerStartTime(Date.now());
   }
 
   function handleSubmit(e) {
@@ -194,6 +242,18 @@ function App() {
 
     const isCorrect = currentQuestion.answers.includes(normalizedAnswer);
 
+    recordSubjectAttempt(
+      currentQuestion.topic,
+      currentQuestion.questionType,
+      isCorrect
+    );
+
+    if (currentQuestion.questionType === "tossup") {
+      setTossupAttempted((prev) => prev + 1);
+    } else {
+      setBonusAttempted((prev) => prev + 1);
+    }
+
     if (isCorrect) {
       setCanOverrideAnswer(false);
       setLastAnswerCorrect(isCorrect);
@@ -204,6 +264,17 @@ function App() {
       }
       
       setFeedback("Correct!");
+
+      setCorrectCount((prev) => prev + 1);
+      if (currentQuestion.questionType === "tossup") {
+        setTossupCorrect((prev) => prev + 1);
+      } else {
+        setBonusCorrect((prev) => prev + 1);
+      }
+
+      if (buzzedEarly) {
+        setCorrectInterruptions((prev) => prev + 1);
+      }
     }
     else {
       setCanOverrideAnswer(true);
@@ -214,6 +285,7 @@ function App() {
       } else {
         setFeedback("Incorrect");
       }
+      setIncorrectCount((prev) => prev + 1);
     }
 
     setPhase("feedback");
@@ -268,6 +340,7 @@ function App() {
       return;
     }
 
+    setSkippedCount((prev) => prev + 1);
     setCanOverrideAnswer(false);
     stopQuestionRendering();
     stop();
@@ -319,14 +392,109 @@ function App() {
     );
   }
 
+  const totalAttempts =
+    correctCount +
+    incorrectCount +
+    timeoutCount;
+
+  const accuracy =
+    totalAttempts > 0
+      ? (correctCount / totalAttempts) * 100
+      : 0;
+
+  const interruptionAccuracy =
+    interruptions > 0
+      ? (correctInterruptions / interruptions) * 100
+      : 0;
+
+  const tossupAccuracy =
+    tossupAttempted > 0
+      ? (tossupCorrect / tossupAttempted) * 100
+      : 0;
+
+  const bonusAccuracy =
+    bonusAttempted > 0
+      ? (bonusCorrect / bonusAttempted) * 100
+      : 0;
+
   if (!currentQuestion) {
-    return(
-     <main>
+    return (
+      <main>
         <h1>End of Set</h1>
 
-        <p>
-          Final Score: {score}
-        </p>
+        <h2>Final Score: {score}</h2>
+
+        <h3 className="stat-title">Overall Statistics</h3>
+
+        <h4>Correct: {correctCount}</h4>
+        <h4>Incorrect: {incorrectCount}</h4>
+        <h4>Skipped: {skippedCount}</h4>
+
+        <h4>
+          Accuracy: {correctCount}/{totalAttempts}
+          {" "}
+          ({accuracy.toFixed(1)}%)
+        </h4>
+
+        <h4>
+          Interruptions: {interruptions}
+        </h4>
+
+        <h4>
+          Interruption Accuracy:
+          {" "}
+          {correctInterruptions}/{interruptions}
+          {" "}
+          ({interruptionAccuracy.toFixed(1)}%)
+        </h4>
+
+        <h4>
+          Tossup Accuracy:
+          {" "}
+          {tossupCorrect}/{tossupAttempted}
+          {" "}
+          ({tossupAccuracy.toFixed(1)}%)
+        </h4>
+
+        <h4>
+          Bonus Accuracy:
+          {" "}
+          {bonusCorrect}/{bonusAttempted}
+          {" "}
+          ({bonusAccuracy.toFixed(1)}%)
+        </h4>
+
+        <h3>Performance by Topic</h3>
+
+        <table className="stats-table">
+          <thead>
+            <tr>
+              <th>Topic</th>
+              <th>Tossups</th>
+              <th>Bonuses</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {Object.entries(subjectStats).map(
+              ([topic, stats]) => (
+                <tr key={topic}>
+                  <td>{topic}</td>
+
+                  <td>
+                    {stats.tossupCorrect}/
+                    {stats.tossupAttempted}
+                  </td>
+
+                  <td>
+                    {stats.bonusCorrect}/
+                    {stats.bonusAttempted}
+                  </td>
+                </tr>
+              )
+            )}
+          </tbody>
+        </table>
       </main>
     );
   }
