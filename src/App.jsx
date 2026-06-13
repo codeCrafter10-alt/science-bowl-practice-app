@@ -3,10 +3,11 @@ import { sampleQuestions } from "./sampleQuestions";
 import { useSpeech } from "./useSpeech";
 
 function App() {
+  const [activeQuestions, setActiveQuestions] = useState(sampleQuestions);
   const [answer, setAnswer] = useState("");
   const [score, setScore] = useState(0);
-  const [currentQuestionId  , setCurrentQuestionId] = useState(sampleQuestions[0].id)
-  const currentQuestion = sampleQuestions.find((question) => question.id === currentQuestionId);
+  const [currentQuestionId  , setCurrentQuestionId] = useState(activeQuestions[0].id)
+  const currentQuestion = activeQuestions.find((question) => question.id === currentQuestionId);
   const [feedback, setFeedback] = useState("");
   const [showAnswer, setShowAnswer] = useState(false);
   const [timeLeft, setTimeLeft] = useState(5);
@@ -21,7 +22,7 @@ function App() {
   const renderIntervalRef = useRef(null);
   const startDelayRef = useRef(null);
   const [canOverrideAnswer, setCanOverrideAnswer] = useState(false);
-  const progress = ((sampleQuestions.findIndex((question) => question.id === currentQuestionId) + 1) / sampleQuestions.length) * 100;
+  const progress = ((activeQuestions.findIndex((question) => question.id === currentQuestionId) + 1) / activeQuestions.length) * 100;
 
   const [correctCount, setCorrectCount] = useState(0);
   const [incorrectCount, setIncorrectCount] = useState(0);
@@ -38,9 +39,65 @@ function App() {
   const [questionHistory, setQuestionHistory] = useState([]);
   const [reviewMode, setReviewMode] = useState(false);
 
+  const [screen, setScreen] = useState("dashboard");
+  const [selectedDivision, setSelectedDivision] = useState("high-school");
+  const [selectedTopics, setSelectedTopics] = useState([]);
+  const [questionCount, setQuestionCount] = useState("all");
+
   function playSound(soundFile) {
     const audio = new Audio(`/sounds/${soundFile}`);
     audio.play().catch(() => {});
+  }
+
+  function toggleTopic(topic) {
+    if (selectedTopics.includes(topic)) {
+      setSelectedTopics((prev) =>
+        prev.filter((t) => t !== topic)
+      );
+    } else {
+      setSelectedTopics((prev) => [
+        ...prev,
+        topic,
+      ]);
+    }
+  }
+
+  function startPractice() {
+    let filteredQuestions = [...sampleQuestions];
+
+    if (selectedDivision !== "both") {
+      filteredQuestions = filteredQuestions.filter(
+        (question) =>
+          question.division === selectedDivision
+      );
+    }
+
+    if (selectedTopics.length > 0) {
+      filteredQuestions = filteredQuestions.filter(
+        (question) =>
+          selectedTopics.includes(question.topic)
+      );
+    }
+
+    if (questionCount !== "all") {
+      filteredQuestions = filteredQuestions.slice(
+        0,
+        Number(questionCount)
+      );
+    }
+
+    if (filteredQuestions.length === 0) {
+      alert("No questions match your filters.");
+      return;
+    }
+
+    setActiveQuestions(filteredQuestions);
+
+    setCurrentQuestionId(
+      filteredQuestions[0].id
+    );
+
+    setScreen("game");
   }
 
   const displayQuestionText = currentQuestion?.type === "multiple-choice" ? `${currentQuestion.question}
@@ -71,7 +128,7 @@ function App() {
   }
 
   useEffect(() => {
-    if (!currentQuestion || phase !== "reading") return;
+    if (!currentQuestion || phase !== "reading" || screen !== "game") return;
 
     setIsRenderingQuestion(true);
     setDisplayedQuestion("");
@@ -108,7 +165,7 @@ function App() {
   }, [phase, stop]);
 
   useEffect(() => {
-    if (phase !== "reading" || timeLeft <= 0 || !currentQuestion || isRenderingQuestion) {
+    if (phase !== "reading" || timeLeft <= 0 || !currentQuestion || isRenderingQuestion || screen !== "game") {
       return;
     }
 
@@ -120,7 +177,7 @@ function App() {
   }, [timeLeft, currentQuestion, phase, isRenderingQuestion])
 
   useEffect(() => {
-    if (timeLeft > 0 || phase !== "reading" || !currentQuestion || isRenderingQuestion) {
+    if (timeLeft > 0 || phase !== "reading" || !currentQuestion || isRenderingQuestion || screen !== "game") {
       return;
     }
 
@@ -134,7 +191,7 @@ function App() {
   }, [timeLeft, phase, currentQuestion, isRenderingQuestion]);
 
   useEffect(() => {
-    if (phase !== "buzzed" || answerTimeLeft <= 0) {
+    if (phase !== "buzzed" || answerTimeLeft <= 0 || screen !== "game") {
       return;
     }
 
@@ -146,7 +203,7 @@ function App() {
   }, [answerTimeLeft, phase]);
 
   useEffect(() => {
-    if (phase !== "buzzed" || answerTimeLeft > 0) {
+    if (phase !== "buzzed" || answerTimeLeft > 0 || screen !== "game") {
       return;
     }
 
@@ -326,11 +383,11 @@ function App() {
   }
 
   function goToNextQuestion(amount) {
-    const currentIndex = sampleQuestions.findIndex(
+    const currentIndex = activeQuestions.findIndex(
       (question) => question.id === currentQuestionId
     );
 
-    const nextQuestion = sampleQuestions[currentIndex + amount];
+    const nextQuestion = activeQuestions[currentIndex + amount];
 
     if (nextQuestion) {
       setCurrentQuestionId(nextQuestion.id);
@@ -448,6 +505,110 @@ function App() {
       ? (bonusCorrect / bonusAttempted) * 100
       : 0;
 
+
+
+  if (screen === "dashboard") {
+    return (
+      <main className="dashboard">
+        <h1>Science Bowl Practice</h1>
+
+        <h2>Division</h2>
+
+        <div className="selection-grid">
+          {[
+            "high-school",
+            "middle-school",
+            "both"
+          ].map((division) => (
+            <button
+              key={division}
+              type="button"
+              className={
+                selectedDivision === division
+                  ? "selection-button selected"
+                  : "selection-button"
+              }
+              onClick={() =>
+                setSelectedDivision(division)
+              }
+            >
+              {division
+                .split("-")
+                .map(
+                  (word) =>
+                    word.charAt(0).toUpperCase() +
+                    word.slice(1)
+                )
+                .join(" ")}
+            </button>
+          ))}
+        </div>
+
+        <h2>Topics</h2>
+
+        <div className="selection-grid">
+          {[
+            "Physics",
+            "Chemistry",
+            "Biology",
+            "Math",
+            "Earth Science",
+            "Energy",
+          ].map((topic) => (
+            <button
+              key={topic}
+              type="button"
+              className={
+                selectedTopics.includes(topic)
+                  ? "selection-button selected"
+                  : "selection-button"
+              }
+              onClick={() =>
+                toggleTopic(topic)
+              }
+            >
+              {topic}
+            </button>
+          ))}
+        </div>
+
+        <h2>Question Count</h2>
+
+        <div className="selection-grid">
+          {["5", "10", "25", "30"].map(
+            (count) => (
+              <button
+                key={count}
+                type="button"
+                className={
+                  questionCount === count
+                    ? "selection-button selected"
+                    : "selection-button"
+                }
+                onClick={() =>
+                  setQuestionCount(count)
+                }
+              >
+                {count === "all"
+                  ? "All"
+                  : count}
+              </button>
+            )
+          )}
+        </div>
+
+        <br />
+        <br />
+
+        <button
+          className="button-primary"
+          onClick={startPractice}
+        >
+          Start Practice
+        </button>
+      </main>
+    );
+  }
 
   if (reviewMode) {
     const missedQuestions = questionHistory.filter(
@@ -605,6 +766,15 @@ function App() {
             )}
           </tbody>
         </table>
+
+        <button
+          className="button-primary"
+          onClick={() => {
+            setScreen("dashboard");
+          }}
+        >
+          New Session
+        </button>
       </main>
     );
   }
@@ -625,7 +795,7 @@ function App() {
       </p>
 
       <p>
-        Question {sampleQuestions.findIndex((question) => question.id === currentQuestionId) + 1} of {" "} {sampleQuestions.length}
+        Question {activeQuestions.findIndex((question) => question.id === currentQuestionId) + 1} of {" "} {activeQuestions.length}
       </p>
 
       <div className="progress-bar">

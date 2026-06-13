@@ -256,3 +256,38 @@ h4 {
 .review-card strong {
   color: white;
 }
+
+.dashboard {
+  max-width: 800px;
+  margin: 40px auto;
+}
+
+.selection-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.selection-button {
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  border: 2px solid #d1d5db;
+  background: white;
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.selection-button:hover {
+  transform: translateY(-2px);
+}
+
+.selection-button.selected {
+  background: #22a0d1;
+  color: white;
+  border-color: #2563eb;
+}
