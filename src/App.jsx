@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { useSpeech } from "./useSpeech";
 import highSchoolQuestions from "./highSchoolQuestions.json"
 import middleSchoolQuestions from "./middleSchoolQuestions.json"
+import { Analytics } from "@vercel/analytics/react"
 
 function shuffleQuestionSets(questions) {
   const groups = [];
