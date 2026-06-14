@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react"
-import { sampleQuestions } from "./sampleQuestions";
 import { useSpeech } from "./useSpeech";
+import highSchoolQuestions from "./highSchoolQuestions.json"
+import middleSchoolQuestions from "./middleSchoolQuestions.json"
 
 function App() {
-  const [activeQuestions, setActiveQuestions] = useState(sampleQuestions);
+  const allQuestions = [...highSchoolQuestions, ...middleSchoolQuestions];
+  const [activeQuestions, setActiveQuestions] = useState(allQuestions);
   const [answer, setAnswer] = useState("");
   const [score, setScore] = useState(0);
   const [currentQuestionId  , setCurrentQuestionId] = useState(activeQuestions[0].id)
@@ -63,7 +65,7 @@ function App() {
   }
 
   function startPractice() {
-    let filteredQuestions = [...sampleQuestions];
+    let filteredQuestions = [...allQuestions];
 
     if (selectedDivision !== "both") {
       filteredQuestions = filteredQuestions.filter(
@@ -575,7 +577,7 @@ function App() {
         <h2>Question Count</h2>
 
         <div className="selection-grid">
-          {["5", "10", "25", "30"].map(
+          {["10", "20", "30", "40"].map(
             (count) => (
               <button
                 key={count}
