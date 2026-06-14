@@ -3,6 +3,30 @@ import { useSpeech } from "./useSpeech";
 import highSchoolQuestions from "./highSchoolQuestions.json"
 import middleSchoolQuestions from "./middleSchoolQuestions.json"
 
+function shuffleQuestionSets(questions) {
+  const groups = [];
+
+  for (let i = 0; i < questions.length; i += 2) {
+    groups.push([
+      questions[i],
+      questions[i + 1],
+    ]);
+  }
+
+  for (let i = groups.length - 1; i > 0; i--) {
+    const randomIndex = Math.floor(
+      Math.random() * (i + 1)
+    );
+
+    [groups[i], groups[randomIndex]] = [
+      groups[randomIndex],
+      groups[i],
+    ];
+  }
+
+  return groups.flat();
+}
+
 function App() {
   const allQuestions = [...highSchoolQuestions, ...middleSchoolQuestions];
   const [activeQuestions, setActiveQuestions] = useState(allQuestions);
@@ -80,6 +104,8 @@ function App() {
           selectedTopics.includes(question.topic)
       );
     }
+
+    filteredQuestions = shuffleQuestionSets(filteredQuestions);
 
     if (questionCount !== "all") {
       filteredQuestions = filteredQuestions.slice(
