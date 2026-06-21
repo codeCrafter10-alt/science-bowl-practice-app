@@ -443,10 +443,10 @@ function App() {
 
     if (currentQuestion.questionType === "tossup" && lastAnswerCorrect && currentQuestion.linkedBonusId) {
       setCurrentQuestionId(currentQuestion.linkedBonusId);
+    } else if (currentQuestion.questionType === "tossup") {
+      goToNextQuestion(2);
     } else if (currentQuestion.questionType === "bonus") {
       goToNextQuestion(1);
-    } else {
-      goToNextQuestion(2);
     }
     
     setIsProcessing(false);
