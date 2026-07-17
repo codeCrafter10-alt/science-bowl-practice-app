@@ -1,12 +1,22 @@
 # Science Bowl Practice App
 
-A web-based Science Bowl practice app built with React and Vite. Includes over 1000 official NSB questions with realistic tossup and bonus gameplay, speech synthesis, and session summary and analytics.
+A web based Science Bowl practice app built with React and Vite. It provides a realistic competition style experience with tossups, bonuses, buzzer mechanics, speech synthesis, and session analytics. Designed with a clean, minimal interface that keeps the focus on practicing and improving without unnecessary setup, distractions, or extra features.
 
 ---
 
 ## Live Demo
 
 #### [View Live Web App](https://sciencebowlpractice.vercel.app/)
+
+---
+
+## Why use this?
+
+Science Bowl practice is about more than just knowing the answers. Competition requires quick recognition, confident responses, and the ability to perform under pressure.
+
+This app is built around a simple goal, getting students practicing as quickly as possible. It provides realistic tossups, bonuses, buzzing, and performance tracking without unnecessary features, complicated menus, or distractions between you and practice.
+
+Whether you are practicing alone or preparing with a team, this app offers a straightforward way to build speed, accuracy, and confidence before competition.
 
 ---
 
