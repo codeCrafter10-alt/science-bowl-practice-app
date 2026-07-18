@@ -8,10 +8,11 @@ function shuffleQuestionSets(questions) {
   const groups = [];
 
   for (let i = 0; i < questions.length; i += 2) {
-    groups.push([
-      questions[i],
-      questions[i + 1],
-    ]);
+    const pair = [questions[i]];
+    if (questions[i + 1]) {
+      pair.push(questions[i + 1]);
+    }
+    groups.push(pair);
   }
 
   for (let i = groups.length - 1; i > 0; i--) {
@@ -336,7 +337,6 @@ function App() {
     setPhase("buzzed");
     setAnswerTimeLeft(4);
     setIsProcessing(false);
-    setAnswerStartTime(Date.now());
   }
 
   function handleSubmit(e) {
