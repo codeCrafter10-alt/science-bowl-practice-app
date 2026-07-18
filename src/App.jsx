@@ -30,7 +30,18 @@ function shuffleQuestionSets(questions) {
 }
 
 function App() {
-  const allQuestions = [...highSchoolQuestions, ...middleSchoolQuestions];
+  const allQuestions = [
+    ...highSchoolQuestions.map(q => ({ 
+      ...q, 
+      id: `hs-${q.id}`, 
+      linkedBonusId: q.linkedBonusId ? `hs-${q.linkedBonusId}` : null 
+    })),
+    ...middleSchoolQuestions.map(q => ({ 
+      ...q, 
+      id: `ms-${q.id}`, 
+      linkedBonusId: q.linkedBonusId ? `ms-${q.linkedBonusId}` : null 
+    }))
+  ];
   const [activeQuestions, setActiveQuestions] = useState(allQuestions);
   const [answer, setAnswer] = useState("");
   const [score, setScore] = useState(0);
