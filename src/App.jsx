@@ -8,10 +8,11 @@ function shuffleQuestionSets(questions) {
   const groups = [];
 
   for (let i = 0; i < questions.length; i += 2) {
-    groups.push([
-      questions[i],
-      questions[i + 1],
-    ]);
+    const pair = [questions[i]];
+    if (questions[i + 1]) {
+      pair.push(questions[i + 1]);
+    }
+    groups.push(pair);
   }
 
   for (let i = groups.length - 1; i > 0; i--) {
@@ -29,7 +30,18 @@ function shuffleQuestionSets(questions) {
 }
 
 function App() {
-  const allQuestions = [...highSchoolQuestions, ...middleSchoolQuestions];
+  const allQuestions = [
+    ...highSchoolQuestions.map(q => ({ 
+      ...q, 
+      id: `hs-${q.id}`, 
+      linkedBonusId: q.linkedBonusId ? `hs-${q.linkedBonusId}` : null 
+    })),
+    ...middleSchoolQuestions.map(q => ({ 
+      ...q, 
+      id: `ms-${q.id}`, 
+      linkedBonusId: q.linkedBonusId ? `ms-${q.linkedBonusId}` : null 
+    }))
+  ];
   const [activeQuestions, setActiveQuestions] = useState(allQuestions);
   const [answer, setAnswer] = useState("");
   const [score, setScore] = useState(0);
@@ -69,7 +81,7 @@ function App() {
   const [screen, setScreen] = useState("dashboard");
   const [selectedDivision, setSelectedDivision] = useState("high-school");
   const [selectedTopics, setSelectedTopics] = useState([]);
-  const [questionCount, setQuestionCount] = useState("all");
+  const [questionCount, setQuestionCount] = useState();
 
   function playSound(soundFile) {
     const audio = new Audio(`/sounds/${soundFile}`);
@@ -108,11 +120,17 @@ function App() {
 
     filteredQuestions = shuffleQuestionSets(filteredQuestions);
 
-    if (questionCount !== "all") {
-      filteredQuestions = filteredQuestions.slice(
-        0,
-        Number(questionCount)
-      );
+    filteredQuestions = filteredQuestions.slice(
+      0,
+      Number(questionCount)
+    );
+
+    const hasNoCount = !questionCount;
+    const hasNoTopics = !selectedTopics || selectedTopics.length === 0;
+
+    if (hasNoCount || hasNoTopics) {
+      alert("No questions match your filters! Please select at least one topic and a question count.");
+      return; 
     }
 
     if (filteredQuestions.length === 0) {
@@ -194,56 +212,42 @@ function App() {
   }, [phase, stop]);
 
   useEffect(() => {
-    if (phase !== "reading" || timeLeft <= 0 || !currentQuestion || isRenderingQuestion || screen !== "game") {
-      return;
-    }
+  if (screen !== "game" || isRenderingQuestion) return;
 
-    const timer = setTimeout(() => {
-      setTimeLeft((prev) => prev-1);
-    }, 1000)
-
-    return () => clearTimeout(timer);
-  }, [timeLeft, currentQuestion, phase, isRenderingQuestion])
-
-  useEffect(() => {
-    if (timeLeft > 0 || phase !== "reading" || !currentQuestion || isRenderingQuestion || screen !== "game") {
-      return;
-    }
-
-    recordQuestionResult("timeout");
-    setTimeoutCount((prev) => prev + 1);
-    setFeedback("Time's up.");
-    setShowAnswer(true);
-    setLastAnswerCorrect(false);
-    setAnswer("");
-    setPhase("feedback");
-  }, [timeLeft, phase, currentQuestion, isRenderingQuestion]);
-
-  useEffect(() => {
-    if (phase !== "buzzed" || answerTimeLeft <= 0 || screen !== "game") {
-      return;
-    }
-
-    const timer = setTimeout(() => {
+  const timer = setInterval(() => {
+    if (phase === "reading" && timeLeft > 0) {
+      setTimeLeft((prev) => prev - 1);
+    } else if (phase === "buzzed" && answerTimeLeft > 0) {
       setAnswerTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [answerTimeLeft, phase]);
-
-  useEffect(() => {
-    if (phase !== "buzzed" || answerTimeLeft > 0 || screen !== "game") {
-      return;
     }
+  }, 1000);
 
+  return () => clearInterval(timer);
+}, [phase, timeLeft, answerTimeLeft, screen, isRenderingQuestion]);
+
+useEffect(() => {
+  if (screen !== "game") return;
+
+  if (phase === "reading" && timeLeft === 0 && !isRenderingQuestion && currentQuestion) {
     recordQuestionResult("timeout");
     setTimeoutCount((prev) => prev + 1);
     setFeedback("Time's up.");
-    setPhase("feedback");
     setShowAnswer(true);
     setLastAnswerCorrect(false);
     setAnswer("");
-  }, [answerTimeLeft, phase]);
+    setPhase("feedback");
+  }
+
+  if (phase === "buzzed" && answerTimeLeft === 0) {
+    recordQuestionResult("timeout");
+    setTimeoutCount((prev) => prev + 1);
+    setFeedback("Time's up.");
+    setShowAnswer(true);
+    setLastAnswerCorrect(false);
+    setAnswer("");
+    setPhase("feedback");
+  }
+}, [timeLeft, answerTimeLeft, phase, isRenderingQuestion, currentQuestion, screen]);
 
   useEffect(() => {
     function handleKeyPress(e) {
@@ -336,7 +340,6 @@ function App() {
     setPhase("buzzed");
     setAnswerTimeLeft(4);
     setIsProcessing(false);
-    setAnswerStartTime(Date.now());
   }
 
   function handleSubmit(e) {
@@ -535,6 +538,35 @@ function App() {
       : 0;
 
 
+  const handleDivisionChange = (newDivision) => {
+    setSelectedDivision(newDivision);
+    
+    const baseTopics = ["Chemistry", "Math", "Earth And Space", "Energy"];
+    let validTopics = [];
+    if (newDivision === "high-school") validTopics = ["Biology", "Physics", ...baseTopics];
+    else if (newDivision === "middle-school") validTopics = ["Life Science", "Physical Science", ...baseTopics];
+    else validTopics = ["Biology", "Life Science", "Chemistry", "Physics", "Physical Science", "Math", "Earth And Space", "Energy"];
+
+    setSelectedTopics((prevSelected) => 
+      prevSelected.filter(topic => validTopics.includes(topic))
+    );
+  };
+
+  
+  const getVisibleTopics = () => {
+    const baseTopics = ["Math", "Earth And Space", "Energy"];
+    
+    if (selectedDivision === "high-school") {
+      return ["Biology", "Physics", "Chemistry", ...baseTopics];
+    }
+    if (selectedDivision === "middle-school") {
+      return ["Life Science", "Physical Science", ...baseTopics];
+    }
+    
+    return ["Biology", "Life Science", "Chemistry", "Physics", "Physical Science", "Math", "Earth And Space", "Energy"];
+  };
+
+  const visibleTopics = getVisibleTopics();
 
   if (screen === "dashboard") {
     return (
@@ -558,7 +590,7 @@ function App() {
                   : "selection-button"
               }
               onClick={() =>
-                setSelectedDivision(division)
+                handleDivisionChange(division)
               }
             >
               {division
@@ -576,14 +608,7 @@ function App() {
         <h2>Topics</h2>
 
         <div className="selection-grid">
-          {[
-            "Physics",
-            "Chemistry",
-            "Biology",
-            "Math",
-            "Earth Science",
-            "Energy",
-          ].map((topic) => (
+          {visibleTopics.map((topic) => (
             <button
               key={topic}
               type="button"
@@ -592,9 +617,7 @@ function App() {
                   ? "selection-button selected"
                   : "selection-button"
               }
-              onClick={() =>
-                toggleTopic(topic)
-              }
+              onClick={() => toggleTopic(topic)}
             >
               {topic}
             </button>
