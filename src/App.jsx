@@ -214,56 +214,42 @@ function App() {
   }, [phase, stop]);
 
   useEffect(() => {
-    if (phase !== "reading" || timeLeft <= 0 || !currentQuestion || isRenderingQuestion || screen !== "game") {
-      return;
-    }
+  if (screen !== "game" || isRenderingQuestion) return;
 
-    const timer = setTimeout(() => {
-      setTimeLeft((prev) => prev-1);
-    }, 1000)
-
-    return () => clearTimeout(timer);
-  }, [timeLeft, currentQuestion, phase, isRenderingQuestion])
-
-  useEffect(() => {
-    if (timeLeft > 0 || phase !== "reading" || !currentQuestion || isRenderingQuestion || screen !== "game") {
-      return;
-    }
-
-    recordQuestionResult("timeout");
-    setTimeoutCount((prev) => prev + 1);
-    setFeedback("Time's up.");
-    setShowAnswer(true);
-    setLastAnswerCorrect(false);
-    setAnswer("");
-    setPhase("feedback");
-  }, [timeLeft, phase, currentQuestion, isRenderingQuestion]);
-
-  useEffect(() => {
-    if (phase !== "buzzed" || answerTimeLeft <= 0 || screen !== "game") {
-      return;
-    }
-
-    const timer = setTimeout(() => {
+  const timer = setInterval(() => {
+    if (phase === "reading" && timeLeft > 0) {
+      setTimeLeft((prev) => prev - 1);
+    } else if (phase === "buzzed" && answerTimeLeft > 0) {
       setAnswerTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [answerTimeLeft, phase]);
-
-  useEffect(() => {
-    if (phase !== "buzzed" || answerTimeLeft > 0 || screen !== "game") {
-      return;
     }
+  }, 1000);
 
+  return () => clearInterval(timer);
+}, [phase, timeLeft, answerTimeLeft, screen, isRenderingQuestion]);
+
+useEffect(() => {
+  if (screen !== "game") return;
+
+  if (phase === "reading" && timeLeft === 0 && !isRenderingQuestion && currentQuestion) {
     recordQuestionResult("timeout");
     setTimeoutCount((prev) => prev + 1);
     setFeedback("Time's up.");
-    setPhase("feedback");
     setShowAnswer(true);
     setLastAnswerCorrect(false);
     setAnswer("");
-  }, [answerTimeLeft, phase]);
+    setPhase("feedback");
+  }
+
+  if (phase === "buzzed" && answerTimeLeft === 0) {
+    recordQuestionResult("timeout");
+    setTimeoutCount((prev) => prev + 1);
+    setFeedback("Time's up.");
+    setShowAnswer(true);
+    setLastAnswerCorrect(false);
+    setAnswer("");
+    setPhase("feedback");
+  }
+}, [timeLeft, answerTimeLeft, phase, isRenderingQuestion, currentQuestion, screen]);
 
   useEffect(() => {
     function handleKeyPress(e) {
