@@ -120,12 +120,10 @@ function App() {
 
     filteredQuestions = shuffleQuestionSets(filteredQuestions);
 
-    if (questionCount !== "all") {
-      filteredQuestions = filteredQuestions.slice(
-        0,
-        Number(questionCount)
-      );
-    }
+    filteredQuestions = filteredQuestions.slice(
+      0,
+      Number(questionCount)
+    );
 
     const hasNoCount = !questionCount;
     const hasNoTopics = !selectedTopics || selectedTopics.length === 0;
